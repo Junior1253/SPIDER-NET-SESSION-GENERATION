@@ -1,69 +1,48 @@
-import { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } from "@whiskeysockets/baileys";
-import qrcode from "qrcode";
+import { useState } from "react";
+import Sidebar from "../components/Sidebar";
 
-export default async function handler(req, res) {
-  try {
-    const { method } = req;
+export default function Session() {
+  const [qrCode, setQrCode] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
 
-    // --- QR CODE LOGIN ---
-    if (method === "GET") {
-      const { state, saveCreds } = await useMultiFileAuthState("session");
-      const { version } = await fetchLatestBaileysVersion();
+  const generateSession = async () => {
+    const res = await fetch("/api/session");
+    const data = await res.json();
 
-      const sock = makeWASocket({
-        version,
-        auth: state,
-        printQRInTerminal: false,
-      });
-
-      sock.ev.on("creds.update", saveCreds);
-
-      sock.ev.on("connection.update", async (update) => {
-        const { qr, connection } = update;
-
-        if (qr) {
-          const qrImage = await qrcode.toDataURL(qr);
-          return res.status(200).json({ mode: "qr", qrCode: qrImage });
-        }
-
-        if (connection === "open") {
-          const sessionData = Buffer.from(
-            JSON.stringify(state.creds),
-            "utf-8"
-          ).toString("base64");
-
-          return res.status(200).json({
-            mode: "session",
-            session: sessionData,
-            message: "✅ Connexion réussie via QR",
-          });
-        }
-      });
+    if (data.qrCode) {
+      setQrCode(data.qrCode);
     }
-
-    // --- OTP LOGIN ---
-    if (method === "POST") {
-      const { phoneNumber, otp } = req.body;
-
-      if (!phoneNumber) {
-        return res.status(400).json({ error: "Numéro de téléphone requis" });
-      }
-
-      // ⚠️ Ici normalement tu appelles l’API WhatsApp officielle pour OTP
-      // Comme dans Levanter. Pour l’instant on simule :
-      if (otp === "123456") {
-        const fakeSession = Buffer.from(`FAKE_SESSION_${phoneNumber}`, "utf-8").toString("base64");
-        return res.status(200).json({
-          mode: "session",
-          session: fakeSession,
-          message: "✅ Connexion réussie via OTP",
-        });
-      } else {
-        return res.status(400).json({ error: "OTP invalide (exemple attendu: 123456)" });
-      }
+    if (data.sessionId) {
+      setSessionId(data.sessionId);
     }
-  } catch (error) {
-    console.error("Erreur session:", error);
-    return res.status(500).json({ error: "Erreur serveur" });
-  }
+  };
+
+  return (
+    <div className="flex">
+      <Sidebar />
+      <main className="ml-60 p-8 w-full">
+        <h1 className="text-2xl font-bold mb-6">🔑 Générer une Session</h1>
+        <button
+          onClick={generateSession}
+          className="bg-blue-600 hover:bg-blue-800 text-white px-6 py-3 rounded-lg shadow-lg"
+        >
+          Générer QR Code
+        </button>
+
+        {qrCode && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold">📲 Scanne ce QR Code :</h2>
+            <img src={qrCode} alt="QR Code" className="mt-4 w-60 border-2 border-gray-300 rounded-lg" />
+          </div>
+        )}
+
+        {sessionId && (
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-2">✅ Session ID générée :</h2>
+            <code className="text-sm break-all">{sessionId}</code>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
