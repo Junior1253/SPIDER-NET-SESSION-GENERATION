@@ -1,21 +1,52 @@
-export default function handler(req, res) {
-  if (req.method === 'POST') {
-    const { phone } = req.body;
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-    if (!phone) {
-      return res.status(400).json({ error: 'Numéro requis' });
+export default function SessionPage() {
+  const router = useRouter();
+  const { otp } = router.query; // Récupère l’OTP depuis l’URL
+  const [sessionId, setSessionId] = useState("");
+
+  useEffect(() => {
+    if (otp) {
+      // ⚡ Simulation génération SessionID à partir de l’OTP
+      const fakeSession = `SESSION-${otp}-${Date.now()}`;
+      setSessionId(fakeSession);
     }
+  }, [otp]);
 
-    // ⚡ Simulation OTP (dans Levanter ça fait vraiment WhatsApp Web)
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    return res.status(200).json({
-      success: true,
-      message: 'OTP généré avec succès',
-      otp,
-    });
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Méthode ${req.method} non autorisée`);
-  }
+  return (
+    <div style={{ fontFamily: "sans-serif", textAlign: "center", marginTop: "50px" }}>
+      <h1 style={{ color: "#2563eb" }}>🔐 Session Active</h1>
+      {sessionId ? (
+        <>
+          <p style={{ marginTop: "20px", fontSize: "18px" }}>
+            Votre session sécurisée est prête ✅
+          </p>
+          <div
+            style={{
+              margin: "20px auto",
+              padding: "15px",
+              border: "2px dashed #2563eb",
+              borderRadius: "12px",
+              width: "80%",
+              maxWidth: "500px",
+              backgroundColor: "#f0f9ff",
+              fontFamily: "monospace",
+              fontSize: "16px",
+              wordBreak: "break-all",
+            }}
+          >
+            {sessionId}
+          </div>
+          <p style={{ color: "gray", fontSize: "14px" }}>
+            Copiez cette Session ID et utilisez-la dans Bot Hosting pour déployer votre bot.
+          </p>
+        </>
+      ) : (
+        <p style={{ marginTop: "20px", color: "red" }}>
+          ⚠️ Aucun OTP fourni. Retournez à la page d’accueil pour générer un OTP.
+        </p>
+      )}
+    </div>
+  );
 }
