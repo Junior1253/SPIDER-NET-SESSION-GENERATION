@@ -1,29 +1,89 @@
-// pages/deploy.js
-import Sidebar from "../components/Sidebar";
-import CodeBlock from "../components/CodeBlock";
+import { useState } from "react";
 
 export default function Deploy() {
-  const deployCommand = `
-# Copiez ce code et collez-le sur Bot Hosting
-# Remplacez <SESSION_ID> par celui généré dans la section Session
+  const [sessionId, setSessionId] = useState("");
+  const [copied, setCopied] = useState(false);
 
-npm install
-SESSION_ID=<SESSION_ID> node bot.js
-  `;
+  // Le modèle index.js que l'utilisateur doit coller sur Bot Hosting
+  const generateCode = () => {
+    return `
+const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
+
+async function startBot() {
+  const { state, saveCreds } = await useMultiFileAuthState("./auth_info");
+
+  const sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: true,
+  });
+
+  sock.ev.on("creds.update", saveCreds);
+
+  sock.ev.on("connection.update", (update) => {
+    const { connection } = update;
+    if (connection === "open") {
+      console.log("✅ Bot connecté avec succès !");
+    }
+  });
+}
+
+// Remplacer par la Session ID générée
+const SESSION_ID = "${sessionId || "VOTRE_SESSION_ID_ICI"}";
+
+startBot();
+    `;
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generateCode());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 p-10 bg-gray-50 min-h-screen">
-        <h1 className="text-2xl font-bold text-blue-900 mb-6">
-          Déployer votre Bot 🚀
-        </h1>
-        <p className="text-gray-600 mb-4">
-          Copiez et collez le texte ci-dessous dans Bot Hosting, puis modifiez
-          uniquement la partie <strong>SESSION_ID</strong>.
-        </p>
-        <CodeBlock code={deployCommand} />
-      </main>
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h1 style={{ color: "#2563eb" }}>🚀 Déployer votre Bot</h1>
+      <p>Collez votre <strong>Session ID</strong> ci-dessous :</p>
+
+      <input
+        type="text"
+        placeholder="Entrez votre Session ID"
+        value={sessionId}
+        onChange={(e) => setSessionId(e.target.value)}
+        style={{
+          padding: "8px",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          width: "100%",
+          marginBottom: "10px",
+        }}
+      />
+
+      <button
+        onClick={copyToClipboard}
+        style={{
+          backgroundColor: "#2563eb",
+          color: "white",
+          padding: "10px 15px",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        {copied ? "✅ Copié !" : "📋 Copier le code"}
+      </button>
+
+      <h2 style={{ marginTop: "20px" }}>📄 Code à coller sur Bot Hosting</h2>
+      <pre
+        style={{
+          background: "#f4f4f4",
+          padding: "15px",
+          borderRadius: "8px",
+          overflowX: "auto",
+        }}
+      >
+        {generateCode()}
+      </pre>
     </div>
   );
 }
