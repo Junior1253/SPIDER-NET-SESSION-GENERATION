@@ -1,37 +1,24 @@
 // pages/session.js
 import Sidebar from "../components/Sidebar";
 
-export default function SessionPage() {
+export default function Session() {
   return (
     <div className="flex">
       <Sidebar />
-      <div className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-4 text-blue-800">🔑 Connexion Session</h1>
-        <p className="mb-4">Choisissez une méthode pour connecter votre bot :</p>
-
-        <div className="space-y-6">
-          {/* Option 1 : QR Code */}
-          <div className="border p-4 rounded-lg shadow">
-            <h2 className="font-semibold text-lg mb-2">📷 Scanner un QR Code</h2>
-            <button className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
-              Générer un QR
-            </button>
-          </div>
-
-          {/* Option 2 : OTP */}
-          <div className="border p-4 rounded-lg shadow">
-            <h2 className="font-semibold text-lg mb-2">📱 Connexion via OTP</h2>
-            <input
-              type="text"
-              placeholder="Entrez votre numéro WhatsApp"
-              className="border px-3 py-2 rounded w-full mb-2"
-            />
-            <button className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800">
-              Recevoir OTP
-            </button>
-          </div>
+      <main className="flex-1 p-10 bg-gray-50 min-h-screen">
+        <h1 className="text-2xl font-bold text-blue-900 mb-6">
+          Générer une Session 🔑
+        </h1>
+        <p className="text-gray-600 mb-4">
+          Scannez le code QR ou utilisez le code OTP pour générer une session
+          sécurisée.
+        </p>
+        <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200">
+          <p className="text-center text-gray-500">
+            👉 Ici s’affichera le QR Code et l’OTP (connecté avec ton API).
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
