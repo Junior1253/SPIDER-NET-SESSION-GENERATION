@@ -1,13 +1,17 @@
 {
-  "name": "spidernet-session-hub",
+  "name": "spidernet-session-generation",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "next start",
+    "dev": "next dev"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.22.1"
+    "@whiskeysockets/baileys": "^6.7.4",
+    "@hapi/boom": "^10.0.1",
+    "next": "13.4.12",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   }
 }
