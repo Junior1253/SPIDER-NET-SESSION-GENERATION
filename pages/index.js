@@ -1,37 +1,36 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState("");
-  const [downloadUrl, setDownloadUrl] = useState("");
+  const [qrCode, setQrCode] = useState(null);
+  const [status, setStatus] = useState("");
 
   const generateSession = async () => {
+    setStatus("⏳ Génération du QR Code...");
+    setQrCode(null);
+
     try {
       const res = await fetch("/api/generate");
       const data = await res.json();
-      if (data.sessionId) {
-        setSessionId(data.sessionId);
-        setDownloadUrl(`/api/download?sessionId=${data.sessionId}`);
+
+      if (data.qrCode) {
+        setQrCode(data.qrCode);
+        setStatus("📲 Scanne le QR Code avec WhatsApp !");
+      } else if (data.message) {
+        setStatus(data.message);
+      } else {
+        setStatus("⚠️ Erreur de génération.");
       }
     } catch (err) {
-      console.error("Erreur lors de la génération :", err);
+      setStatus("⚠️ Erreur serveur.");
     }
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "50px" }}>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>SPIDER-NET Secure-Bot</h1>
-      <button onClick={generateSession}>
-        Générer une Session ID
-      </button>
-
-      {sessionId && (
-        <div style={{ marginTop: "20px" }}>
-          <p><b>Session ID générée :</b> {sessionId}</p>
-          <a href={downloadUrl} download="index.js">
-            <button>Télécharger index.js</button>
-          </a>
-        </div>
-      )}
+      <button onClick={generateSession}>Générer une Session</button>
+      <p>{status}</p>
+      {qrCode && <img src={qrCode} alt="QR Code WhatsApp" />}
     </div>
   );
 }
