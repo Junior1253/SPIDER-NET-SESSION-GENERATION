@@ -1,17 +1,14 @@
 {
-  "name": "spidernet-session-generation",
+  "name": "spider-net-session-generator",
   "version": "1.0.0",
-  "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "next start",
-    "dev": "next dev"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.4",
-    "@hapi/boom": "^10.0.1",
-    "next": "13.4.12",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
   }
 }
