@@ -1,20 +1,53 @@
-// pages/index.js
-import Sidebar from "../components/Sidebar";
+import { useState } from "react";
 
 export default function Home() {
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+
+  const generateSession = async () => {
+    const res = await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setOtp(data.otp);
+    } else {
+      alert(data.error);
+    }
+  };
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 p-10 bg-gray-50 min-h-screen">
-        <h1 className="text-3xl font-bold text-blue-900 mb-4">
-          Bienvenue sur SPIDER-NET SECURE-BOT🚀
-        </h1>
-        <p className="text-gray-700">
-          Générez votre <strong>Session</strong>, puis utilisez la section{" "}
-          <strong>Déployer</strong> pour lancer votre bot facilement, comme sur
-          Levanter.
-        </p>
-      </main>
+    <div style={{ fontFamily: "sans-serif", textAlign: "center", marginTop: "50px" }}>
+      <h1 style={{ color: "#2563eb" }}>🔒 Générer une Session</h1>
+      <input
+        type="text"
+        placeholder="Entrez votre numéro"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        style={{ padding: "10px", width: "250px", border: "1px solid #2563eb", borderRadius: "8px" }}
+      />
+      <br /><br />
+      <button
+        onClick={generateSession}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#2563eb",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          cursor: "pointer"
+        }}
+      >
+        Générer OTP
+      </button>
+
+      {otp && (
+        <div style={{ marginTop: "20px", fontSize: "20px", fontWeight: "bold" }}>
+          ✅ Votre OTP est : <span style={{ color: "green" }}>{otp}</span>
+        </div>
+      )}
     </div>
   );
 }
