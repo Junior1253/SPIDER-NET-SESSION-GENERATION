@@ -1,52 +1,43 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { makeWASocket, useMultiFileAuthState } from "@whiskeysockets/baileys";
+import qrcode from "qrcode";
 
-export default function SessionPage() {
-  const router = useRouter();
-  const { otp } = router.query; // Récupère l’OTP depuis l’URL
-  const [sessionId, setSessionId] = useState("");
+export default async function handler(req, res) {
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState("session");
 
-  useEffect(() => {
-    if (otp) {
-      // ⚡ Simulation génération SessionID à partir de l’OTP
-      const fakeSession = `SESSION-${otp}-${Date.now()}`;
-      setSessionId(fakeSession);
-    }
-  }, [otp]);
+    const sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: false,
+    });
 
-  return (
-    <div style={{ fontFamily: "sans-serif", textAlign: "center", marginTop: "50px" }}>
-      <h1 style={{ color: "#2563eb" }}>🔐 Session Active</h1>
-      {sessionId ? (
-        <>
-          <p style={{ marginTop: "20px", fontSize: "18px" }}>
-            Votre session sécurisée est prête ✅
-          </p>
-          <div
-            style={{
-              margin: "20px auto",
-              padding: "15px",
-              border: "2px dashed #2563eb",
-              borderRadius: "12px",
-              width: "80%",
-              maxWidth: "500px",
-              backgroundColor: "#f0f9ff",
-              fontFamily: "monospace",
-              fontSize: "16px",
-              wordBreak: "break-all",
-            }}
-          >
-            {sessionId}
-          </div>
-          <p style={{ color: "gray", fontSize: "14px" }}>
-            Copiez cette Session ID et utilisez-la dans Bot Hosting pour déployer votre bot.
-          </p>
-        </>
-      ) : (
-        <p style={{ marginTop: "20px", color: "red" }}>
-          ⚠️ Aucun OTP fourni. Retournez à la page d’accueil pour générer un OTP.
-        </p>
-      )}
-    </div>
-  );
+    sock.ev.on("creds.update", saveCreds);
+
+    sock.ev.on("connection.update", async (update) => {
+      const { qr, connection } = update;
+
+      // ✅ Si un QR est généré
+      if (qr) {
+        const qrImage = await qrcode.toDataURL(qr);
+        return res.status(200).json({ mode: "qr", qrCode: qrImage });
+      }
+
+      // ✅ Quand connexion réussie
+      if (connection === "open") {
+        // On encode les credentials en Base64 (comme Levanter)
+        const sessionData = Buffer.from(
+          JSON.stringify(state.creds),
+          "utf-8"
+        ).toString("base64");
+
+        return res.status(200).json({
+          mode: "session",
+          session: sessionData,
+          message: "✅ Connexion réussie, voici ta SESSION_ID",
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Erreur session:", error);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 }
