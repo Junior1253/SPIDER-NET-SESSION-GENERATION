@@ -1,30 +1,23 @@
-export default async function handler(req, res) {
-  const { sessionId } = req.query;
+export default function handler(req, res) {
+  if (req.method === 'POST') {
+    const { sessionId } = req.body;
 
-  if (!sessionId) {
-    return res.status(400).json({ error: "Session ID manquant" });
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID manquant" });
+    }
+
+    const content = `
+      // Exemple de fichier index.js pour Bot Hosting
+      module.exports = {
+        sessionId: "${sessionId}", // Remplace par ton Session ID
+        botName: "Spider-Net-Bot"
+      };
+    `;
+
+    res.setHeader("Content-Disposition", "attachment; filename=index.js");
+    res.setHeader("Content-Type", "application/javascript");
+    res.status(200).send(content);
+  } else {
+    res.status(405).json({ error: "Méthode non autorisée" });
   }
-
-  const indexFile = `
-import makeWASocket, { useMultiFileAuthState } from "@whiskeysockets/baileys";
-
-async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState("auth_info");
-  const sock = makeWASocket({
-    auth: state,
-  });
-
-  sock.ev.on("messages.upsert", (m) => {
-    console.log("Nouveau message", m);
-  });
-
-  sock.ev.on("creds.update", saveCreds);
-}
-
-startBot();
-  `;
-
-  res.setHeader("Content-disposition", "attachment; filename=index.js");
-  res.setHeader("Content-Type", "text/javascript");
-  res.send(indexFile);
 }
