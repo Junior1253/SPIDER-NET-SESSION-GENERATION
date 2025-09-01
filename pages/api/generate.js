@@ -1,38 +1,38 @@
-import { makeWASocket, useMultiFileAuthState } from "@whiskeysockets/baileys";
+import { makeWASocket, useSingleFileAuthState } from "@whiskeysockets/baileys";
 import qrcode from "qrcode";
 
 export default async function handler(req, res) {
   try {
-    const { state, saveCreds } = await useMultiFileAuthState("session");
+    // Utiliser un seul fichier JSON pour stocker la session
+    const { state, saveState } = useSingleFileAuthState("./auth_info.json");
 
     const sock = makeWASocket({
       auth: state,
       printQRInTerminal: false,
     });
 
-    sock.ev.on("creds.update", saveCreds);
+    sock.ev.on("creds.update", saveState);
 
-    let qrCodeData = null;
+    let responded = false; // éviter plusieurs réponses
 
-    sock.ev.on("connection.update", (update) => {
+    sock.ev.on("connection.update", async (update) => {
       const { qr, connection } = update;
 
-      if (qr) {
-        qrcode.toDataURL(qr, (err, url) => {
-          if (err) {
-            return res.status(500).json({ error: "QR Code error" });
-          }
-          qrCodeData = url;
-          res.status(200).json({ qrCode: qrCodeData });
-        });
+      if (qr && !responded) {
+        responded = true;
+        const qrCodeData = await qrcode.toDataURL(qr);
+        return res.status(200).json({ qrCode: qrCodeData });
       }
 
-      if (connection === "open") {
-        res.status(200).json({ message: "✅ WhatsApp connecté !" });
+      if (connection === "open" && !responded) {
+        responded = true;
+        return res.status(200).json({ message: "✅ WhatsApp connecté !" });
       }
     });
   } catch (error) {
     console.error("Erreur génération session:", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Erreur serveur" });
+    }
   }
 }
