@@ -1,19 +1,20 @@
-import { makeWASocket, useSingleFileAuthState } from "@whiskeysockets/baileys";
+import { makeWASocket } from "@whiskeysockets/baileys";
 import qrcode from "qrcode";
+
+let sessionData = {}; // stockage en mémoire (perd après restart)
 
 export default async function handler(req, res) {
   try {
-    // Utiliser un seul fichier JSON pour stocker la session
-    const { state, saveState } = useSingleFileAuthState("./auth_info.json");
-
     const sock = makeWASocket({
-      auth: state,
+      auth: sessionData,
       printQRInTerminal: false,
     });
 
-    sock.ev.on("creds.update", saveState);
+    sock.ev.on("creds.update", (creds) => {
+      sessionData = creds; // mise à jour en mémoire
+    });
 
-    let responded = false; // éviter plusieurs réponses
+    let responded = false;
 
     sock.ev.on("connection.update", async (update) => {
       const { qr, connection } = update;
