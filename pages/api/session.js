@@ -1,0 +1,37 @@
+import { makeWASocket, useMultiFileAuthState } from "@whiskeysockets/baileys";
+import qrcode from "qrcode";
+
+export default async function handler(req, res) {
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState("session");
+
+    const sock = makeWASocket({
+      auth: state,
+      printQRInTerminal: false,
+    });
+
+    sock.ev.on("creds.update", saveCreds);
+
+    sock.ev.on("connection.update", (update) => {
+      const { qr, connection } = update;
+
+      if (qr) {
+        qrcode.toDataURL(qr, (err, url) => {
+          if (err) {
+            return res.status(500).json({ error: "QR Code error" });
+          }
+          return res.status(200).json({ qrCode: url });
+        });
+      }
+
+      if (connection === "open") {
+        return res.status(200).json({
+          sessionId: Buffer.from(JSON.stringify(state.creds)).toString("base64"),
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Erreur génération session:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+}
