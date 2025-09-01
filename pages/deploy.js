@@ -2,25 +2,28 @@
 import Sidebar from "../components/Sidebar";
 import CodeBlock from "../components/CodeBlock";
 
-export default function DeployPage() {
-  const exampleCode = `
-  {
-    "SESSION_ID": "VOTRE_SESSION_ID_ICI",
-    "BOT_NAME": "SpiderNet-Bot",
-    "PREFIX": "!"
-  }`;
+export default function Deploy() {
+  const deployCommand = `
+# Copiez ce code et collez-le sur Bot Hosting
+# Remplacez <SESSION_ID> par celui généré dans la section Session
+
+npm install
+SESSION_ID=<SESSION_ID> node bot.js
+  `;
 
   return (
     <div className="flex">
       <Sidebar />
-      <div className="flex-1 p-6">
-        <h1 className="text-2xl font-bold mb-4 text-blue-800">🚀 Déployer votre Bot</h1>
-        <p className="mb-4">
-          Copiez le code ci-dessous et collez-le dans votre hébergeur (par ex. Bot Hosting).  
-          Remplacez <strong>VOTRE_SESSION_ID_ICI</strong> par la Session ID envoyée en privé par le bot.
+      <main className="flex-1 p-10 bg-gray-50 min-h-screen">
+        <h1 className="text-2xl font-bold text-blue-900 mb-6">
+          Déployer votre Bot 🚀
+        </h1>
+        <p className="text-gray-600 mb-4">
+          Copiez et collez le texte ci-dessous dans Bot Hosting, puis modifiez
+          uniquement la partie <strong>SESSION_ID</strong>.
         </p>
-        <CodeBlock code={exampleCode} />
-      </div>
+        <CodeBlock code={deployCommand} />
+      </main>
     </div>
   );
 }
